@@ -1,0 +1,46 @@
+defmodule OpenrouterSdk.Api.Messages do
+  @moduledoc """
+  `POST /messages` — anthropic-format messages api.
+
+  request shape mirrors anthropic's: `model`, `messages`, `max_tokens`,
+  `system`, `tools`, `thinking`, etc.
+
+  streaming events come back as `{event_name, decoded_json}` tuples
+  (e.g. `{"content_block_delta", %{...}}`). pass `raw: true` to receive
+  raw `%SSE.Event{}` instead.
+  """
+
+  alias OpenrouterSdk.{Client, Config, Streaming}
+  alias OpenrouterSdk.Client.Request
+
+  @path "/messages"
+
+  @spec create(map(), keyword()) :: {:ok, map()} | {:error, OpenrouterSdk.Error.t()}
+  def create(payload, opts \\ []) when is_map(payload) do
+    config = Config.merge(Config.new(opts), opts)
+
+    %Request{
+      method: :post,
+      path: @path,
+      body: {:json, Map.put(payload, :stream, false)},
+      accept: :json
+    }
+    |> Client.request(config)
+  end
+
+  @spec create_stream(map(), keyword()) ::
+          {:ok, Enumerable.t() | reference() | term()} | {:error, OpenrouterSdk.Error.t()}
+  def create_stream(payload, opts \\ []) when is_map(payload) do
+    config = Config.merge(Config.new(opts), opts)
+
+    request = %Request{
+      method: :post,
+      path: @path,
+      body: {:json, Map.put(payload, :stream, true)},
+      accept: :sse,
+      opts: Keyword.take(opts, [:raw, :decode])
+    }
+
+    Streaming.wrap(fn -> Client.stream(request, config) end, opts)
+  end
+end
