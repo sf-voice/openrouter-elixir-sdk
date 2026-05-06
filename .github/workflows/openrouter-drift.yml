@@ -1,0 +1,45 @@
+name: openrouter snapshot drift
+
+on:
+  schedule:
+    # daily at 06:00 utc — adjust to taste
+    - cron: "0 6 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: "27"
+          elixir-version: "1.18"
+
+      - name: install deps
+        run: mix deps.get
+
+      - name: regenerate snapshot
+        run: mix openrouter.snapshot
+
+      - name: open pr if changed
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "chore: refresh openrouter catalog"
+          title: "chore: refresh openrouter catalog"
+          body: |
+            automated refresh of `priv/openrouter/{models,providers}.json`.
+
+            review the diff for added/removed models or pricing changes
+            before merging.
+          branch: openrouter/snapshot-refresh
+          delete-branch: true
+          add-paths: |
+            priv/openrouter/models.json
+            priv/openrouter/providers.json
+            priv/openrouter/schema_version.txt
