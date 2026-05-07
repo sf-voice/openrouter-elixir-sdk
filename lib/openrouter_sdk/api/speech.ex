@@ -1,9 +1,9 @@
 defmodule OpenrouterSdk.Api.Speech do
   @moduledoc """
-  `POST /audio/speech` — text-to-speech.
+  `POST /audio/speech` — text-to-speech via the dedicated endpoint.
 
       {:ok, mp3_binary} = OpenrouterSdk.Api.Speech.create(%{
-        model: "openai/tts-1",
+        model: "<some-tts-slug>",
         input: "hello there",
         voice: "alloy",
         response_format: "mp3"
@@ -13,6 +13,15 @@ defmodule OpenrouterSdk.Api.Speech do
 
   the response is the raw audio bytes — we do NOT decode json on this
   endpoint.
+
+  > #### caveat {: .warning}
+  >
+  > openrouter's `/audio/speech` accepts a fixed allowlist of model
+  > slugs that are NOT exposed via `/models`, so you can't discover
+  > them through the catalog. for catalog-driven tts, prefer
+  > `OpenrouterSdk.speak/2` (in `OpenrouterSdk.Audio`) — it routes
+  > through `/chat/completions` with audio output and works against
+  > any model in `OpenrouterSdk.Catalog.Models.tts_models/0`.
   """
 
   alias OpenrouterSdk.{Client, Config, Streaming}

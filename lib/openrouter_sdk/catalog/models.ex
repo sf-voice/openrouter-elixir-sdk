@@ -43,11 +43,43 @@ defmodule OpenrouterSdk.Catalog.Models do
   @doc """
   filter the snapshot.
 
-  supported keys: `:modality`, `:supported_parameter`, `:provider_id`.
+  supported keys: `:modality`, `:input_modality`, `:output_modality`,
+  `:supported_parameter`, `:provider_id`.
   """
   @spec list(keyword()) :: [map()]
   def list(filters) when is_list(filters) do
     Enum.filter(@models, &matches?(&1, filters))
+  end
+
+  @doc """
+  models capable of `text -> text` chat completions. handy default for
+  populating a "pick a model" ui.
+  """
+  @spec chat_models() :: [map()]
+  def chat_models do
+    list(input_modality: "text", output_modality: "text")
+  end
+
+  @doc """
+  models capable of `text -> audio` — i.e. text-to-speech. note that
+  this also includes conversational audio models (gpt-audio etc.) that
+  happen to be tts-capable.
+  """
+  @spec tts_models() :: [map()]
+  def tts_models do
+    list(input_modality: "text", output_modality: "audio")
+  end
+
+  @doc """
+  models capable of `audio -> text` — i.e. speech-to-text via the
+  documented `/chat/completions` `input_audio` content block. this is
+  the working path for stt on openrouter; the dedicated
+  `/audio/transcriptions` endpoint silently rejects multipart bodies.
+  see `OpenrouterSdk.transcribe/2` for the higher-level helper.
+  """
+  @spec audio_input_models() :: [map()]
+  def audio_input_models do
+    list(input_modality: "audio", output_modality: "text")
   end
 
   @doc "lookup by id, returns nil if absent"
@@ -79,6 +111,14 @@ defmodule OpenrouterSdk.Catalog.Models do
       {:modality, m} ->
         modalities = get_in(model, ["architecture", "output_modalities"]) || []
         m in modalities or m == get_in(model, ["architecture", "modality"])
+
+      {:input_modality, m} ->
+        mods = get_in(model, ["architecture", "input_modalities"]) || []
+        m in mods
+
+      {:output_modality, m} ->
+        mods = get_in(model, ["architecture", "output_modalities"]) || []
+        m in mods
 
       {:supported_parameter, p} ->
         params = model["supported_parameters"] || []

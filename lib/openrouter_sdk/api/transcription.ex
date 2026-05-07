@@ -1,6 +1,7 @@
 defmodule OpenrouterSdk.Api.Transcription do
   @moduledoc """
-  `POST /audio/transcriptions` — speech-to-text.
+  `POST /audio/transcriptions` — speech-to-text via the dedicated
+  endpoint.
 
   the upstream endpoint is openai-compatible: multipart upload with a
   `file` part plus a `model` field.
@@ -11,6 +12,17 @@ defmodule OpenrouterSdk.Api.Transcription do
           model: "openai/whisper-1",
           language: "en"
         })
+
+  > #### caveat {: .warning}
+  >
+  > openrouter's gateway currently json-parses the request body and
+  > rejects multipart uploads — a real call against this endpoint
+  > returns `400` with `No number after minus sign in JSON at
+  > position 1` (v8's json parser choking on the `--<boundary>`
+  > preamble). until that ships properly, prefer
+  > `OpenrouterSdk.transcribe/2` (in `OpenrouterSdk.Audio`), which
+  > routes through `/chat/completions` with an `input_audio` content
+  > block and works against any catalog-listed audio-input model.
   """
 
   alias OpenrouterSdk.{Client, Config}

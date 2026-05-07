@@ -3,12 +3,20 @@
 elixir sdk for [openrouter](https://openrouter.ai). thin, finch-based,
 ships zero policy.
 
+> unofficial. not affiliated with, supported by, or endorsed by the
+> openrouter team. maintained by the [san francisco voice
+> company](https://github.com/sf-voice) — get in touch at
+> [contact@sf-voice.sh](mailto:contact@sf-voice.sh).
+
 supports:
 
 - chat completions (openai-compatible) — buffered + sse streaming
 - anthropic messages (`/v1/messages`) — buffered + sse streaming
 - embeddings
-- speech (text-to-speech) and transcription (speech-to-text)
+- text-to-speech (`speak/2`) and speech-to-text (`transcribe/2`) via
+  `/chat/completions` audio modalities (catalog-discoverable models),
+  plus the dedicated `/audio/speech` and `/audio/transcriptions`
+  endpoints for completeness
 - bearer api keys + oauth 2 pkce primitives
 - a hard-coded snapshot of all models + providers, refreshed nightly by
   ci with an auto-opened pr when openrouter ships drift
@@ -113,30 +121,41 @@ streaming yields `{event_name, decoded_payload}` tuples
   })
 ```
 
-### speech (tts)
+### speak (tts)
+
+routes through `/chat/completions` with audio output. works against
+any model in `OpenrouterSdk.Catalog.Models.tts_models/0`.
 
 ```elixir
 {:ok, mp3} =
-  OpenrouterSdk.speech(%{
-    model: "openai/tts-1",
-    input: "hello there",
+  OpenrouterSdk.speak(%{
+    model: "openai/gpt-audio-mini",
+    text: "hello there",
     voice: "alloy",
-    response_format: "mp3"
+    format: "mp3"
   })
 
 File.write!("hello.mp3", mp3)
 ```
 
-### transcription (stt)
+### transcribe (stt)
+
+routes through `/chat/completions` with an `input_audio` content
+block. works against any model in
+`OpenrouterSdk.Catalog.Models.audio_input_models/0`.
 
 ```elixir
-{:ok, %{"text" => text}} =
-  OpenrouterSdk.transcription(%{
-    file: "recording.wav",
-    model: "openai/whisper-1",
-    language: "en"
+{:ok, text} =
+  OpenrouterSdk.transcribe(%{
+    audio: File.read!("recording.webm"),
+    mime: "audio/webm",
+    model: "google/gemini-2.5-flash"
   })
 ```
+
+> the dedicated `/audio/speech` and `/audio/transcriptions` endpoints
+> (`OpenrouterSdk.speech/2` / `transcription/2`) are still shipped
+> for completeness but have caveats — see the moduledocs.
 
 ## oauth pkce
 

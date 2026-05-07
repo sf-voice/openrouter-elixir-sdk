@@ -1,7 +1,7 @@
 defmodule OpenrouterSdk.MixProject do
   use Mix.Project
 
-  @version "0.1.0"
+  @version "0.1.2"
   @source_url "https://github.com/zmzlois/openrouter_sdk"
 
   def project do
@@ -42,8 +42,10 @@ defmodule OpenrouterSdk.MixProject do
   end
 
   defp description do
-    "Elixir SDK for the OpenRouter API: chat, anthropic messages, embeddings, " <>
-      "speech, transcription, OAuth PKCE, and a versioned model/provider catalog."
+    "Unofficial Elixir SDK for the OpenRouter API: chat, anthropic messages, " <>
+      "embeddings, speech, transcription, OAuth PKCE, and a versioned " <>
+      "model/provider catalog. Not affiliated with or endorsed by the " <>
+      "OpenRouter team. Maintained by the San Francisco Voice Company."
   end
 
   defp package do
