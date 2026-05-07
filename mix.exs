@@ -2,7 +2,7 @@ defmodule OpenrouterSdk.MixProject do
   use Mix.Project
 
   @version "0.1.2"
-  @source_url "https://github.com/zmzlois/openrouter_sdk"
+  @source_url "https://github.com/sf-voice/openrouter_sdk"
 
   def project do
     [
